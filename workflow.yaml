@@ -1,0 +1,44 @@
+test_name: "VS_Lifecycle_Test"
+
+stages:
+  - stage_name: "Pre-Fetcher"
+    description: "Fetch all resources in parallel and log counts."
+    execution: "parallel"
+    actions:
+      - type: "api_fetch_list"
+        endpoint: "/api/tenant"
+        label: "Tenants"
+      - type: "api_fetch_list"
+        endpoint: "/api/virtualservice"
+        label: "Virtual Services"
+      - type: "api_fetch_list"
+        endpoint: "/api/serviceengine"
+        label: "Service Engines"
+      - type: "mock_infra_check" 
+        details: "Perform SSH and RDP checks on infra"
+
+  - stage_name: "Pre-Validation"
+    description: "Find target VS and validate it is enabled."
+    execution: "sequential"
+    actions:
+      - type: "find_target_uuid"
+        resource: "virtualservice"
+      - type: "validate_state"
+        field: "enabled"
+        expected_value: true
+
+  - stage_name: "Task / Trigger"
+    description: "Disable the Virtual Service."
+    execution: "sequential"
+    actions:
+      - type: "api_update_resource"
+        payload: { "enabled": false }
+
+  - stage_name: "Post-Validation"
+    description: "Verify the VS is actually disabled."
+    execution: "sequential"
+    actions:
+      - type: "api_get_resource"
+      - type: "validate_state"
+        field: "enabled"
+        expected_value: false

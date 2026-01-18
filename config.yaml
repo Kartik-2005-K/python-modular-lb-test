@@ -1,0 +1,10 @@
+environment:
+  base_url: "https://semantic-brandea-banao-dc049ed0.koyeb.app"
+  
+credentials:
+  # Change these to your preferred credentials
+  username: "candidate_user_01" 
+  password: "securePassword123!"
+
+target:
+  vs_name: "backend-vs-t1r_1000-1"
