@@ -56,6 +56,8 @@ class APIClient:
         self.use_mock_api = "mock-api.example.com" in self.base_url or "koyeb.app" in self.base_url
         def authenticate(self):
         """Handles Registration (if needed) and Login."""
+        # Update line 59 (inside APIClient.__init__):
+self.use_mock_api = "mock-api.example.com" in self.base_url or "koyeb.app" in self.base_url
         if self.use_mock_api:
             logger.info("Using Mock API for authentication.")
             # Simulate successful registration (or user already exists)
@@ -109,12 +111,16 @@ def __init__(self, config_path, workflow_path):
         # Load your external files instead of the hardcoded strings
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
-        
-        with open(workflow_path, 'r') as f:
-            self.workflow = yaml.safe_load(f)
+            # Replace the existing __init__ (around line 111) with this:
+def __init__(self, config_path, workflow_path):
+    with open(config_path, 'r') as f:
+        self.config = yaml.safe_load(f)
+    
+    with open(workflow_path, 'r') as f:
+        self.workflow = yaml.safe_load(f)
 
-        self.client = APIClient(self.config)
-        self.context = {}
+    self.client = APIClient(self.config)
+    self.context = {}
 class TestFramework:
     """Core framework that parses YAML and executes steps."""
 
