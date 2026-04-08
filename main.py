@@ -52,7 +52,9 @@ class APIClient:
         # Mock state for resources (for use with mock API)
         self.mock_resource_state = {}
 
-    def authenticate(self):
+   # Update to recognize your actual base_url as a mock-friendly target
+        self.use_mock_api = "mock-api.example.com" in self.base_url or "koyeb.app" in self.base_url
+        def authenticate(self):
         """Handles Registration (if needed) and Login."""
         if self.use_mock_api:
             logger.info("Using Mock API for authentication.")
@@ -82,11 +84,12 @@ class APIClient:
         # The prompt specifies Basic Auth for login
         resp = self.session.post(login_url, auth=HTTPBasicAuth(self.username, self.password))
 
-        if resp.status_code == 200:
-            data = resp.json()
-            self.token = data.get('token')
-            self.session.headers.update({"Authorization": f"Bearer {self.token}"})
-            logger.info("Authentication Successful. Token acquired.")
+        if not self.mock_resource_state:
+                    self.mock_resource_state = {
+                        "uuid-123": {"id": "uuid-123", "name": "backend-vs-t1r_1000-1", "enabled": True},
+                        "uuid-456": {"id": "uuid-456", "name": "other_service", "enabled": True}
+                    }
+
         else:
             raise Exception(f"Login Failed: {resp.text}")
 
@@ -102,25 +105,16 @@ class APIClient:
                     }
                 return MockResponse(list(self.mock_resource_state.values()), 200)
             elif endpoint.startswith("/api/virtualservice/"):
-                uuid = endpoint.split('/')[-1]
-                if uuid in self.mock_resource_state:
-                    return MockResponse(self.mock_resource_state[uuid], 200)
-            return MockResponse({}, 404) # Default for unhandled mock GETs
+def __init__(self, config_path, workflow_path):
+        # Load your external files instead of the hardcoded strings
+        with open(config_path, 'r') as f:
+            self.config = yaml.safe_load(f)
+        
+        with open(workflow_path, 'r') as f:
+            self.workflow = yaml.safe_load(f)
 
-        return self.session.get(f"{self.base_url}{endpoint}")
-
-    def put(self, endpoint, payload):
-        if self.use_mock_api:
-            logger.info(f"Using Mock API for PUT {endpoint} with payload {payload}")
-            if endpoint.startswith("/api/virtualservice/"):
-                uuid = endpoint.split('/')[-1]
-                if uuid in self.mock_resource_state:
-                    self.mock_resource_state[uuid].update(payload)
-                    return MockResponse(self.mock_resource_state[uuid], 200)
-            return MockResponse({}, 404) # Default for unhandled mock PUTs
-
-        return self.session.put(f"{self.base_url}{endpoint}", json=payload)
-
+        self.client = APIClient(self.config)
+        self.context = {}
 class TestFramework:
     """Core framework that parses YAML and executes steps."""
 
@@ -140,15 +134,18 @@ target:
         self.workflow_content = """
 stages:
   - stage_name: "Initial Setup"
+  def execute(self):
+        logger.info(f"Starting Test: {self.workflow.get('test_name', 'Unnamed Test')}")
+        self.client.authenticate()
+        for stage in self.workflow['stages']:
+            self.run_stage(stage)
     description: "Perform infrastructure checks and fetch virtual services"
 def __init__(self, config_path, workflow_path):
         # Load your external files instead of the hardcoded strings
-        with open(config_path, 'r') as f:
-            self.config = yaml.safe_load(f)
-        
-        with open(workflow_path, 'r') as f:
-            self.workflow = yaml.safe_load(f)
-
+        if stage.get('execution') == 'parallel':
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                # Use list() to force the execution of the map
+                list(executor.map(self.dispatch_action, actions))
         self.client = APIClient(self.config)
         self.context = {}
             self.run_stage(stage)
