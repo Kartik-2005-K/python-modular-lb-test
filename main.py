@@ -141,39 +141,16 @@ target:
 stages:
   - stage_name: "Initial Setup"
     description: "Perform infrastructure checks and fetch virtual services"
-    execution: "sequential"
-    actions:
-      - type: "mock_infra_check"
-      - type: "api_fetch_list"
-        endpoint: "/api/virtualservice"
-        label: "virtualservices"
-      - type: "find_target_uuid"
-        resource: "virtualservice"
-  - stage_name: "Update and Validate Virtual Service"
-    description: "Update the virtual service status and validate the change"
-    execution: "sequential"
-    actions:
-      - type: "api_update_resource"
-        payload:
-          status: "enabled"
-      - type: "api_get_resource"
-      - type: "validate_state"
-        field: "status"
-        expected_value: "enabled"
-"""
-
-        # Load YAML from strings instead of files
-        self.config = yaml.safe_load(self.config_content)
-        self.workflow = yaml.safe_load(self.workflow_content)
+def __init__(self, config_path, workflow_path):
+        # Load your external files instead of the hardcoded strings
+        with open(config_path, 'r') as f:
+            self.config = yaml.safe_load(f)
+        
+        with open(workflow_path, 'r') as f:
+            self.workflow = yaml.safe_load(f)
 
         self.client = APIClient(self.config)
-        self.context = {} # Shared state between steps (stores UUIDs, etc.)
-
-    def execute(self):
-        logger.info("--- Starting Test Framework ---")
-        self.client.authenticate()
-
-        for stage in self.workflow['stages']:
+        self.context = {}
             self.run_stage(stage)
 
     def run_stage(self, stage):
